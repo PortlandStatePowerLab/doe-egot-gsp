@@ -16,7 +16,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Find packages go here.
-find_package(Boost REQUIRED regex filesystem)
+find_package(Boost REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # project dirs
 add_subdirectory(src)
