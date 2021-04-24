@@ -1,13 +1,3 @@
-include(FetchContent)
-
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        master
-)
-
-FetchContent_MakeAvailable(googletest)
-
 set(COMPONENT_NAME gsp_tests)
 
 add_executable (${COMPONENT_NAME}

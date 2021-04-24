@@ -1,7 +1,7 @@
-#include "include/https_server.hpp"
-#include "include/server_certificates.hpp"
-#include "include/send_lambda.hpp"
-#include "include/handle_request.hpp"
+#include "include/https/https_server.hpp"
+#include "include/https/server_certificates.hpp"
+#include "include/https/send_lambda.hpp"
+#include "include/https/handle_request.hpp"
 
 void Fail(beast::error_code ec, char const* what) 
 {
@@ -11,7 +11,7 @@ void Fail(beast::error_code ec, char const* what)
 void DoSession(
     net::ip::tcp::socket& socket,
     ssl::context& ctx,
-    std::shared_ptr<std::string const> const& doc_root) 
+    std::shared_ptr<std::string> doc_root) 
 {
     bool close = false;
     beast::error_code ec;
@@ -41,7 +41,7 @@ void DoSession(
             return Fail(ec, "read");
 
         // Send the response
-        HandleRequest(*doc_root, std::move(req), lambda);
+        HandleRequest(doc_root, std::move(req), lambda);
         if(ec)
             return Fail(ec, "write");
         if(close)

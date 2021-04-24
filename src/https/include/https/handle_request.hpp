@@ -18,13 +18,15 @@ namespace http = beast::http;     // from <boost/beast/http.hpp>
 namespace net = boost::asio;      // from <boost/asio.hpp>
 namespace ssl = boost::asio::ssl; // from <boost/asio/ssl.hpp>
 
+
+
 // This function produces an HTTP response for the given
 // request. The type of the response object depends on the
 // contents of the request, so the interface requires the
 // caller to pass a generic lambda for receiving the response.
 template <class Body, class Allocator, class Send>
 void HandleRequest(
-    beast::string_view doc_root,
+    std::shared_ptr<std::string> doc_root,
     http::request<Body, http::basic_fields<Allocator>> &&req,
     Send &&send)
 {
@@ -68,38 +70,71 @@ void HandleRequest(
     if (req.method() != http::verb::get &&
         req.method() != http::verb::post &&
         req.method() != http::verb::put &&
-        req.method() != http::verb::delete_)
+        req.method() != http::verb::delete_ && 
+        req.method() != http::verb::head)
         return send(bad_request("Unknown HTTP-method"));
 
-    // Build the path to the requested file
-    std::string path;
-    if (req.target().back() == '/')
-        path.append("dcap");
+    // Request path must be absolute and not contain "..".
+    if( req.target().empty() ||
+        req.target()[0] != '/' ||
+        req.target().find("..") != beast::string_view::npos)
+        return send(bad_request("Illegal request-target"));
 
-    // Attempt to open the file
+    // Build the path to the request
+    std::string path = static_cast<std::string>(req.target());
+    if(req.target().back() == '/')
+    {
+        path.append("dcap");
+    }
+
     beast::error_code ec;
     http::file_body::value_type body;
-    body.open(path.c_str(), beast::file_mode::scan, ec);
+    if (req.method() == http::verb::get)
+    {
+        // Cache the size since we need it after the move
+        auto const size = body.size();
 
-    // Handle the case where the file doesn't exist
-    if (ec == beast::errc::no_such_file_or_directory)
-        return send(not_found(req.target()));
+        // Handle the case where the file doesn't exist
+        if (ec == beast::errc::no_such_file_or_directory)
+        {
+            return send(not_found(req.target()));
+        }
+        
+        // Respond to GET request
+        http::response<http::file_body> res{
+            std::piecewise_construct,
+            std::make_tuple(std::move(body)),
+            std::make_tuple(http::status::ok, req.version())};
+        res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+        res.set(http::field::content_type, "application/sep+xml");
+        res.content_length(size);
+        res.keep_alive(req.keep_alive());
+        return send(std::move(res));
+    }
+
+    if (req.method() == http::verb::post)
+    {
+        boost::beast::string_view content_type = req[http::field::content_type];
+		if (content_type != "application/sep+xml")
+		{
+			return send(bad_request("Bad request"));
+		}
+
+        std::cout << req.body() << std::endl;
+
+        // Respond to POST request
+        http::response<http::file_body> res{
+            std::piecewise_construct,
+            std::make_tuple(std::move(body)),
+            std::make_tuple(http::status::created , req.version())};
+        res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+        res.set(http::field::location, "/blob");
+        res.keep_alive(req.keep_alive());
+        return send(std::move(res));
+    }
 
     // Handle an unknown error
     if (ec)
         return send(server_error(ec.message()));
 
-    // Cache the size since we need it after the move
-    auto const size = body.size();
-
-    // Respond to GET request
-    http::response<http::file_body> res{
-        std::piecewise_construct,
-        std::make_tuple(std::move(body)),
-        std::make_tuple(http::status::ok, req.version())};
-    res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-    res.set(http::field::content_type, "application/sep+xml");
-    res.content_length(size);
-    res.keep_alive(req.keep_alive());
-    return send(std::move(res));
 }
