@@ -17,6 +17,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Find packages go here.
 include(FetchContent)
+include(ExternalProject)
 find_package(Boost REQUIRED)
 find_package(OpenSSL REQUIRED)
 
@@ -33,6 +34,17 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(googletest flecs)
+
+ExternalProject_Add (
+  ssl-ca
+  GIT_REPOSITORY https://github.com/PortlandStatePowerLab/ssl-ca.git
+  GIT_TAG        main
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+  UPDATE_COMMAND COMMAND COMMAND ${CMAKE_COMMAND} -E copy_directory
+  <SOURCE_DIR>/certs ${CMAKE_BINARY_DIR}/src/
+)
 
 # project dirs
 add_subdirectory(src)
