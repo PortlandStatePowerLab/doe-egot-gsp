@@ -11,7 +11,7 @@
 //
 
 #include <boost/asio/buffer.hpp>
-#include <boost/asio/ssl/context.hpp>
+#include <boost/asio/ssl.hpp>
 #include <cstddef>
 #include <memory>
 
@@ -23,14 +23,48 @@
     depending on your environment Please see the documentation
     accompanying the Beast certificate for more details.
 */
+
+// from https://www.javaer101.com/en/article/12616899.html
+template <typename Verifier>
+class verbose_verification
+{
+public:
+  verbose_verification(Verifier verifier)
+    : verifier_(verifier)
+  {}
+
+  bool operator()(
+    bool preverified,
+    boost::asio::ssl::verify_context& ctx
+  )
+  {
+    char subject_name[256];
+    X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+    X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
+    bool verified = verifier_(preverified, ctx);
+    std::cout << "Verifying: " << subject_name << "\n"
+                 "Verified: " << verified << std::endl;
+    return verified;
+  }
+private:
+  Verifier verifier_;
+};
+
+///@brief Auxiliary function to make verbose_verification objects.
+template <typename Verifier>
+verbose_verification<Verifier>
+make_verbose_verification(Verifier verifier)
+{
+  return verbose_verification<Verifier>(verifier);
+}
+
 inline void
-load_server_certificate(boost::asio::ssl::context &ctx)
+load_server_certificate(ssl::context &ctx)
 {
     ctx.set_verify_mode(ssl::verify_peer|ssl::verify_fail_if_no_peer_cert);
-    ctx.load_verify_file("CA.crt");
-    ctx.use_certificate_file("server/server.crt", ssl::context::pem);
-    ctx.use_private_key_file("server/server.key", boost::asio::ssl::context::pem);
-
+    ctx.load_verify_file("ca.crt");
+    ctx.use_certificate_file("server.crt", ssl::context::pem);
+    ctx.use_private_key_file("server.key", ssl::context::pem);
 
     std::string const dh =
         "-----BEGIN DH PARAMETERS-----\n"
@@ -42,16 +76,7 @@ load_server_certificate(boost::asio::ssl::context &ctx)
         "QMUk26jPTIVTLfXmmwU0u8vUkpR7LQKkwwIBAg==\n"
         "-----END DH PARAMETERS-----\n";
 
-    ctx.set_password_callback(
-        [](std::size_t,
-           boost::asio::ssl::context_base::password_purpose) {
-            return "test";
-        });
-
-    ctx.set_options(
-        boost::asio::ssl::context::default_workarounds |
-        boost::asio::ssl::context::no_sslv2 |
-        boost::asio::ssl::context::single_dh_use);
+    // use custom verify_callback here for debugging purposes
 
     ctx.use_tmp_dh(
         boost::asio::buffer(dh.data(), dh.size()));

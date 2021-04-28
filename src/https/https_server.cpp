@@ -2,6 +2,7 @@
 #include "include/https/server_certificates.hpp"
 #include "include/https/send_lambda.hpp"
 #include "include/https/handle_request.hpp"
+#include <boost/asio/ssl/rfc2818_verification.hpp>
 
 void Fail(beast::error_code ec, char const* what) 
 {
@@ -65,10 +66,15 @@ HttpsServer::HttpsServer(const std::string &address, uint16_t port, const std::s
     , port_(port)
     , doc_root_(std::make_shared<std::string>(doc_root))
     , io_ctx_(1)
-    , ssl_ctx_(ssl::context::tlsv12)
+    , ssl_ctx_(boost::asio::ssl::context::tlsv12_server)
     , acceptor_(io_ctx_, {net::ip::make_address(address_), port_})
 {
     load_server_certificate(ssl_ctx_);
+    ssl_ctx_.set_verify_callback(
+        make_verbose_verification(
+            boost::asio::ssl::rfc2818_verification(address_)
+        )
+    );
 }
 
 HttpsServer::~HttpsServer() 
