@@ -43,7 +43,7 @@ ExternalProject_Add (
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
   UPDATE_COMMAND COMMAND COMMAND ${CMAKE_COMMAND} -E copy_directory
-  <SOURCE_DIR>/certs ${CMAKE_BINARY_DIR}/src/
+  <SOURCE_DIR>/root-ca ${CMAKE_BINARY_DIR}/src/
 )
 
 # project dirs
