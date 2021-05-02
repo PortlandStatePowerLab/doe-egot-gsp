@@ -70,11 +70,6 @@ HttpsServer::HttpsServer(const std::string &address, uint16_t port, const std::s
     , acceptor_(io_ctx_, {net::ip::make_address(address_), port_})
 {
     load_server_certificate(ssl_ctx_);
-    ssl_ctx_.set_verify_callback(
-        make_verbose_verification(
-            boost::asio::ssl::rfc2818_verification(address_)
-        )
-    );
 }
 
 HttpsServer::~HttpsServer() 

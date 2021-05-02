@@ -91,24 +91,33 @@ void HandleRequest(
     http::file_body::value_type body;
     if (req.method() == http::verb::get)
     {
-        // Cache the size since we need it after the move
-        auto const size = body.size();
 
-        // Handle the case where the file doesn't exist
-        if (ec == beast::errc::no_such_file_or_directory)
-        {
-            return send(not_found(req.target()));
-        }
+        std::string res_body = R"(<?xml version="1.0" encoding="utf-8"?>
+                <DeviceCapability pollRate="900" href="http://uri1" xmlns="urn:ieee:std:2030.5:ns">
+                <CustomerAccountListLink all="0" href="http://uri1" />
+                <DemandResponseProgramListLink all="0" href="http://uri1" />
+                <DERProgramListLink all="0" href="http://uri1" />
+                <FileListLink all="0" href="http://uri1" />
+                <MessagingProgramListLink all="0" href="http://uri1" />
+                <PrepaymentListLink all="0" href="http://uri1" />
+                <ResponseSetListLink all="0" href="http://uri1" />
+                <TariffProfileListLink all="0" href="http://uri1" />
+                <TimeLink href="http://uri1" />
+                <UsagePointListLink all="0" href="http://uri1" />
+                <EndDeviceListLink all="0" href="http://uri1" />
+                <MirrorUsagePointListLink all="0" href="http://uri1" />
+                <SelfDeviceLink href="http://uri1" />
+                </DeviceCapability>)";
         
         // Respond to GET request
-        http::response<http::file_body> res{
-            std::piecewise_construct,
-            std::make_tuple(std::move(body)),
-            std::make_tuple(http::status::ok, req.version())};
+        http::response<http::string_body> res{
+            http::status::ok, req.version()
+        };
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
         res.set(http::field::content_type, "application/sep+xml");
-        res.content_length(size);
         res.keep_alive(req.keep_alive());
+        res.body() = res_body;
+        res.prepare_payload();
         return send(std::move(res));
     }
 
