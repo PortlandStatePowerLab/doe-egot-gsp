@@ -36,19 +36,11 @@ bool verify_certificate_simple(bool preverified, boost::asio::ssl::verify_contex
     X509* cert = X509_STORE_CTX_get_current_cert(cts);
     X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
 
-    std::cout << "SSL Verification:" << std::endl;
-    std::cout << "Verifying: " << subject_name << "\n";
-
     // fingerprint
     const EVP_MD *digest = EVP_get_digestbyname("sha256");
     unsigned char md[EVP_MAX_MD_SIZE];
     unsigned int n;
     X509_digest(cert, digest, md, &n);
-
-    printf("Fingerprint: ");
-      for(size_t pos = 0; pos < 10; pos++)
-        printf("%02x:", md[pos]);
-      printf("/n");
 
     switch (X509_STORE_CTX_get_error(cts))
     {
@@ -73,53 +65,19 @@ bool verify_certificate_simple(bool preverified, boost::asio::ssl::verify_contex
         preverified = false;
         break;
     default:
-        std::cout << "error: " <<  X509_STORE_CTX_get_error(cts) << std::endl;
+        //std::cout << "error: " <<  X509_STORE_CTX_get_error(cts) << std::endl;
         preverified = true;
         break;
     }
 }
 
-// from https://www.javaer101.com/en/article/12616899.html
-template <typename Verifier>
-class verbose_verification
-{
-public:
-  verbose_verification(Verifier verifier)
-    : verifier_(verifier)
-  {}
-
-  bool operator()(
-    bool preverified,
-    boost::asio::ssl::verify_context& ctx
-  )
-  {
-    char subject_name[256];
-    X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
-    X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
-    bool verified = verifier_(preverified, ctx);
-    std::cout << "Verifying: " << subject_name << "\n"
-                 "Verified: " << verified << std::endl;
-    return verified;
-  }
-private:
-  Verifier verifier_;
-};
-
-///@brief Auxiliary function to make verbose_verification objects.
-template <typename Verifier>
-verbose_verification<Verifier>
-make_verbose_verification(Verifier verifier)
-{
-  return verbose_verification<Verifier>(verifier);
-}
-
 inline void
-load_server_certificate(ssl::context &ctx)
+load_server_certificate(const std::string &root, ssl::context &ctx)
 {
     ctx.set_verify_mode(ssl::verify_peer|ssl::verify_fail_if_no_peer_cert);
-    ctx.add_verify_path("certs");
-    ctx.use_certificate_file("server.crt", ssl::context::pem);
-    ctx.use_private_key_file("private/server.key", ssl::context::pem);
+    ctx.add_verify_path(root + "/certs");
+    ctx.use_certificate_file(root + "/server.crt", ssl::context::pem);
+    ctx.use_private_key_file(root + "/private/server.key", ssl::context::pem);
     ctx.set_options(
       boost::asio::ssl::context::default_workarounds |
       boost::asio::ssl::context::single_dh_use

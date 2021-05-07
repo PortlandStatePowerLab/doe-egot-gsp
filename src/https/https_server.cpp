@@ -69,7 +69,7 @@ HttpsServer::HttpsServer(const std::string &address, uint16_t port, const std::s
     , ssl_ctx_(boost::asio::ssl::context::tlsv12_server)
     , acceptor_(io_ctx_, {net::ip::make_address(address_), port_})
 {
-    load_server_certificate(ssl_ctx_);
+    load_server_certificate(doc_root, ssl_ctx_);
 }
 
 HttpsServer::~HttpsServer() 
