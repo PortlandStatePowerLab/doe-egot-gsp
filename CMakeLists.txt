@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 # project variables
 set(PROJECT_VERSION 1.0.0)
-set(PROJECT_NAME egot)
+set(PROJECT_NAME GSP)
 
 # This is your project statement. You should always list languages;
 project(
@@ -50,3 +50,24 @@ ExternalProject_Add (
 # project dirs
 add_subdirectory(src)
 add_subdirectory(tests)
+
+# include CMakePackageConfigHelpers macro
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion 
+)
+
+configure_package_config_file(
+    ${PROJECT_NAME}Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    INSTALL_DESTINATION lib/cmake
+)
+
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    DESTINATION lib/cmake
+)
