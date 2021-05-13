@@ -20,6 +20,11 @@ target_include_directories(${COMPONENT_NAME} PUBLIC
   ${OpenSSL_INCLUDE_DIRS}
 )
 
+add_custom_command(
+    TARGET ${COMPONENT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/resources/ ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+)
 
 # install the target and create export-set
 install(
