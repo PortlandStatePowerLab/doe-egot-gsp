@@ -36,16 +36,18 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(googletest flecs)
 
-ExternalProject_Add (
-  ssl-ca
-  GIT_REPOSITORY https://github.com/PortlandStatePowerLab/ssl-ca.git
-  GIT_TAG        main
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ""
-  INSTALL_COMMAND ""
-  UPDATE_COMMAND COMMAND COMMAND ${CMAKE_COMMAND} -E copy_directory
-  <SOURCE_DIR>/root-ca ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-)
+if (NOT TARGET ssl-ca)
+  ExternalProject_Add (
+    ssl-ca
+    GIT_REPOSITORY https://github.com/PortlandStatePowerLab/ssl-ca.git
+    GIT_TAG        main
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    UPDATE_COMMAND COMMAND ${CMAKE_COMMAND} -E copy_directory
+    <SOURCE_DIR>/root-ca/private/ ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/certs
+  )
+endif()
 
 # project dirs
 add_subdirectory(src)

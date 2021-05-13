@@ -1,4 +1,4 @@
-set(COMPONENT_NAME ecs)
+set(COMPONENT_NAME ecs_server)
 
 add_library(${COMPONENT_NAME} INTERFACE)
 

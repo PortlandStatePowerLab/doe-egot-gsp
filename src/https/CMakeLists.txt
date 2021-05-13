@@ -1,4 +1,4 @@
-set(COMPONENT_NAME https)
+set(COMPONENT_NAME https_server)
 
 add_library(${COMPONENT_NAME} STATIC
   https_server.cpp   
