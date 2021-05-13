@@ -29,7 +29,7 @@
 
 // This is temporary since I was struggling to get rfc 2818 to validate with self
 // signed certificates on the localhost.
-bool verify_certificate_simple(bool preverified, boost::asio::ssl::verify_context& ctx)
+static bool verify_certificate_simple(bool preverified, boost::asio::ssl::verify_context& ctx)
 {
     X509_STORE_CTX *cts = ctx.native_handle();
     char subject_name[256];
