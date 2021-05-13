@@ -75,9 +75,9 @@ inline void
 load_server_certificate(const std::string &root, ssl::context &ctx)
 {
     ctx.set_verify_mode(ssl::verify_peer|ssl::verify_fail_if_no_peer_cert);
-    ctx.add_verify_path(root + "/certs");
-    ctx.use_certificate_file(root + "/server.crt", ssl::context::pem);
-    ctx.use_private_key_file(root + "/private/server.key", ssl::context::pem);
+    ctx.add_verify_path(root + "/certs/certs");
+    ctx.use_certificate_file(root + "/certs/server.crt", ssl::context::pem);
+    ctx.use_private_key_file(root + "/certs/private/server.key", ssl::context::pem);
     ctx.set_options(
       boost::asio::ssl::context::default_workarounds |
       boost::asio::ssl::context::single_dh_use
