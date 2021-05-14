@@ -17,8 +17,9 @@ target_include_directories(${COMPONENT_NAME} PUBLIC
   ${ecs_server_INCLUDE_DIRS}
 )
 
+
 add_custom_command(
-    TARGET ${COMPONENT_NAME} POST_BUILD
+    TARGET ${COMPONENT_NAME}
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/resources/ ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    ${PROJECT_SOURCE_DIR}/resources/ ${CMAKE_BINARY_DIR}/bin
 )
